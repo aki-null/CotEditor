@@ -90,6 +90,32 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
     [[self document] setStringToEditorView];
 }
 
+// Snow Leopard byte size
+#define KSByteSize ((gestaltSystemVersionMajor >= 0x1060) ? 1000. : 1024.)
+
+- (NSString *)windowTitleForDocumentDisplayName:(NSString *)displayName
+{
+    NSDocument *document = self.document;
+    NSNumber *byteSizeObject = [[[NSFileManager defaultManager] attributesOfItemAtPath:document.fileURL.path
+                                                                                 error:NULL] objectForKey:NSFileSize];
+    if (byteSizeObject) {
+        unsigned long long size = [byteSizeObject unsignedLongLongValue];
+        NSString *sizeString = nil;
+        if (size < KSByteSize) {
+            sizeString = [NSString stringWithFormat:@"%qu bytes", size];
+        } else if (size >= KSByteSize && size < pow(KSByteSize, 2.)) {
+            sizeString = [NSString stringWithFormat:@"%.0f KB", (size / KSByteSize)];
+        } else if (size >= pow(KSByteSize, 2.) && size < pow(KSByteSize, 3.)) {
+            sizeString = [NSString stringWithFormat:@"%.1f MB", (size / pow(KSByteSize, 2.))];
+        } else if (size >= pow(KSByteSize, 3.)) {
+            sizeString = [NSString stringWithFormat:@"%.2f GB", (size / pow(KSByteSize, 3.))];
+        }
+        return [NSString stringWithFormat:@"%@ (%@)", displayName, sizeString];
+    } else {
+        return displayName;
+    }
+}
+
 
 // ------------------------------------------------------
 - (void)setDocumentEdited:(BOOL)inFlag
